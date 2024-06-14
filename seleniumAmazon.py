@@ -31,22 +31,43 @@ driver = webdriver.Chrome(options=options)
 
 driver.get(website)
 
-# 'tr' 요소가 나타날 때까지 최대 10초 대기
-WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, '.adbl-impression-container ')))
+
+# 페이지 네이션
+pagination = driver.find_element(By.XPATH,'//ul[contains(@class,"pagingElements")]')
+pages = pagination.find_elements(By.TAG_NAME,'li')
+lastPage = int(pages[-2].text)
 
 
-container = driver.find_element(By.CSS_SELECTOR,'.adbl-impression-container ')
-
-products = container.find_elements(By.CSS_SELECTOR,'.bc-list-item.productListItem')
-
+currentPage = 1
 book_title = []
 book_author = []
 book_length = []
 
-for product in products:
-    book_title.append(product.find_element(By.XPATH,'.//h3[contains(@class,"bc-heading")]').text)
-    book_author.append(product.find_element(By.XPATH,'.//li[contains(@class,"authorLabel")]').text)
-    book_length.append(product.find_element(By.XPATH,'.//li[contains(@class,"runtimeLabel")]').text)
+
+while currentPage <= lastPage:
+
+    # 'tr' 요소가 나타날 때까지 최대 10초 대기
+    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, '.adbl-impression-container ')))
+
+
+    container = driver.find_element(By.CSS_SELECTOR,'.adbl-impression-container ')
+
+    products = container.find_elements(By.CSS_SELECTOR,'.bc-list-item.productListItem')
+
+
+    for product in products:
+        book_title.append(product.find_element(By.XPATH,'.//h3[contains(@class,"bc-heading")]').text)
+        book_author.append(product.find_element(By.XPATH,'.//li[contains(@class,"authorLabel")]').text)
+        book_length.append(product.find_element(By.XPATH,'.//li[contains(@class,"runtimeLabel")]').text)
+    
+    currentPage = currentPage + 1
+
+    try:
+        nextPage = driver.find_element(By.XPATH,'//span[contains(@class,"nextButton")]')
+        nextPage.click()
+    except:
+        pass 
+
 
 
 df_book = pd.DataFrame({'제목' : book_title, '글쓴이' : book_author, '시간' : book_length })
